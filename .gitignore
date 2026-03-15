@@ -397,10 +397,6 @@ android/pytorch_android_torchvision/.cxx
 .stable_pyre_client
 .pyre_client
 
-# Claude Code local configuration
-CLAUDE.local.md
-/test_*.py
-/debug_*.py
-CLAUDE_CONTEXT/
-/.claude/settings.local.json
-
+# Ignore data files
+data/
+lightning_logs/
