@@ -9,6 +9,7 @@ dependencies = [
     "torchvision>=0.25.0, <0.26.0",
     "pytorch-lightning>=2.5.0, <2.6.0",
     "datasets",
+    "pyyaml>=6.0.3",
 ]
 
 [[tool.uv.index]]
