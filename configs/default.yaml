@@ -1,6 +1,6 @@
 # Model
 model:
-  backbone: efficientnet_b4
+  backbone: resnet50
   num_classes: 12
   pretrained: true
 

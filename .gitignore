@@ -401,3 +401,6 @@ android/pytorch_android_torchvision/.cxx
 data/
 lightning_logs/
 checkpoints/
+
+# Images to test the model
+images/

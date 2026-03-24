@@ -35,3 +35,15 @@ uv run python main.py
 ## Dataset
 
 The dataset is loaded automatically from [HuggingFace](https://huggingface.co/datasets/fish-gang/deepscan-dataset) on first run and cached locally under `data/`. To force re-download, set `force_download=True`.
+
+## Prediction
+
+Run inference on new images using a trained checkpoint:
+
+```bash
+# Single image
+uv run python predict.py --checkpoint checkpoints/<run>/best.ckpt --image fish.jpg
+
+# Folder of images
+uv run python predict.py --checkpoint checkpoints/<run>/best.ckpt --image images/
+```
