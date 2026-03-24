@@ -47,3 +47,11 @@ uv run python predict.py --checkpoint checkpoints/<run>/best.ckpt --image fish.j
 # Folder of images
 uv run python predict.py --checkpoint checkpoints/<run>/best.ckpt --image images/
 ```
+
+## Exporting to Core ML Format
+
+Use the `script/export_coreml.py` script to export any model checkpoint to Core ML format:
+
+```bash
+uv run python -m scripts.export_coreml --checkpoint checkpoints/2026-03-24_202836_mobilenet_v3_large/best-epoch\=05-val_acc\=0.896.ckpt
+```
