@@ -400,3 +400,4 @@ android/pytorch_android_torchvision/.cxx
 # Ignore data files
 data/
 lightning_logs/
+checkpoints/
