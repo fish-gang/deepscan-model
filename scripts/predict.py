@@ -2,8 +2,8 @@
 Run inference on new images using a trained DeepScan checkpoint.
 
 Usage:
-    uv run python predict.py --checkpoint checkpoints/.../best.ckpt --image fish.jpg
-    uv run python predict.py --checkpoint checkpoints/.../best.ckpt --image images/
+    uv run python -m scripts.predict --checkpoint checkpoints/.../best.ckpt --image fish.jpg
+    uv run python -m scripts.predict --checkpoint checkpoints/.../best.ckpt --image images/
 """
 
 import argparse

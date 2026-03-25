@@ -21,10 +21,14 @@ def create_model(num_classes=12, backbone="efficientnet_b0", pretrained=True):
     # Mid-range model, good balance of speed and accuracy
     elif backbone == "efficientnet_b0":
         model = models.efficientnet_b0(weights=weights)
-        model.classifier[1] = nn.Linear(model.classifier[1].in_features, num_classes)  # type: ignore
+        model.classifier[1] = nn.Linear(model.classifier[1].in_features, num_classes)
 
     elif backbone == "resnet50":
         model = models.resnet50(weights=weights)
+        model.fc = nn.Linear(model.fc.in_features, num_classes)
+
+    elif backbone == "resnet152":
+        model = models.resnet152(weights=weights)
         model.fc = nn.Linear(model.fc.in_features, num_classes)
 
     # Heavier model, better accuracy but slower

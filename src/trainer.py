@@ -4,7 +4,6 @@ from pathlib import Path
 
 import pytorch_lightning as pl
 import torch.nn as nn
-import yaml
 from pytorch_lightning.callbacks import ModelCheckpoint
 from torch.optim import Adam
 

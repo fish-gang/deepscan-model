@@ -19,8 +19,8 @@ class DeepScanDataset(Dataset):
     def __len__(self):
         return len(self.dataset)
 
-    def __getitem__(self, idx):
-        item = self.dataset[idx]
+    def __getitem__(self, index):
+        item = self.dataset[index]
         image = item["image"].convert("RGB")  # Ensure 3 channels
         label = item["label"]  # int class index
 
@@ -56,7 +56,7 @@ class DeepScanDataModule(pl.LightningDataModule):
         )
 
         # First split: train+val vs test
-        split1 = dataset.train_test_split(  # type: ignore
+        split1 = dataset.train_test_split(
             test_size=self.test_split,
             seed=42,
             stratify_by_column="label",
@@ -78,7 +78,7 @@ class DeepScanDataModule(pl.LightningDataModule):
             split1["test"], transform=val_transforms(self.image_size)
         )
 
-        self.label_names = dataset.features["label"].names  # type: ignore
+        self.label_names = dataset.features["label"].names
         print(
             f"Split sizes: train={len(self.train_ds)}, "
             f"val={len(self.val_ds)}, test={len(self.test_ds)}"
