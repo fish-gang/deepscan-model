@@ -1,0 +1,43 @@
+name: Sync model to iOS
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'model/testmodel.mlmodel'
+
+jobs:
+  sync-model:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout deepscan-model
+        uses: actions/checkout@v4
+
+      - name: Checkout deepscan-ios
+        uses: actions/checkout@v4
+        with:
+          repository: fish-gang/deepscan-ios
+          token: ${{ secrets.IOS_REPO_TOKEN }}
+          path: deepscan-ios
+          
+      - name: Copy model file to deepscan-ios
+        run: |
+          mkdir -p deepscan-ios/model
+          cp model/testmodel.mlmodel deepscan-ios/model/testmodel.mlmodel
+          
+      - name: Configure git user
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com" 
+
+      - name: Commit and push model update
+        run: |
+          cd deepscan-ios
+          git add model/testmodel.mlmodel
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Sync model from deepscan-model"
+            git push origin main
+          fi   
