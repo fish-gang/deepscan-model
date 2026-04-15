@@ -3,10 +3,10 @@ name = "deepscan-model"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
-    "torch>=2.10.0, <2.11.0",
-    "torchvision>=0.25.0, <0.26.0",
+    "torch>=2.10.0,<2.12",
+    "torchvision>=0.25.0,<0.27",
     "pytorch-lightning>=2.5.0, <2.6.0",
     "datasets",
     "pyyaml>=6.0.3",
