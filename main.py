@@ -5,10 +5,9 @@ from src.trainer import train
 
 
 def dict_to_namespace(d: dict) -> SimpleNamespace:
-    return SimpleNamespace(**{
-        k: dict_to_namespace(v) if isinstance(v, dict) else v
-        for k, v in d.items()
-    })
+    return SimpleNamespace(
+        **{k: dict_to_namespace(v) if isinstance(v, dict) else v for k, v in d.items()}
+    )
 
 
 def main():

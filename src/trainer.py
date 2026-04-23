@@ -5,6 +5,7 @@ from pathlib import Path
 import pytorch_lightning as pl
 import torch.nn as nn
 from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.loggers import TensorBoardLogger
 from torch.optim import Adam
 
 from src.data import DeepScanDataModule
@@ -89,12 +90,19 @@ def train(config, config_path: str):
         save_last=True,
     )
 
+    tb_logger = TensorBoardLogger(
+        save_dir=str(run_dir),
+        name="",
+        version="",
+    )
+
     trainer = pl.Trainer(
         max_epochs=train_cfg.max_epochs,
         accelerator="auto",
         devices=1,
         log_every_n_steps=train_cfg.log_every_n_steps,
         callbacks=[checkpoint_cb],
+        logger=tb_logger,
     )
 
     trainer.fit(model, datamodule=data)
