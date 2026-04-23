@@ -4,7 +4,7 @@ from torchvision import models
 # List of pretrained models: https://docs.pytorch.org/vision/main/models.html#classification
 
 
-def create_model(num_classes=12, backbone="efficientnet_b0", pretrained=True):
+def create_model(num_classes=14, backbone="efficientnet_b0", pretrained=True):
     weights = "IMAGENET1K_V1" if pretrained else None
 
     # Lightweight model, very fast but less accurate

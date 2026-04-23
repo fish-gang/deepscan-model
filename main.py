@@ -1,7 +1,14 @@
 import argparse
 import yaml
-
+from types import SimpleNamespace
 from src.trainer import train
+
+
+def dict_to_namespace(d: dict) -> SimpleNamespace:
+    return SimpleNamespace(**{
+        k: dict_to_namespace(v) if isinstance(v, dict) else v
+        for k, v in d.items()
+    })
 
 
 def main():
@@ -15,7 +22,7 @@ def main():
     args = parser.parse_args()
 
     with open(args.config) as f:
-        config = yaml.safe_load(f)
+        config = dict_to_namespace(yaml.safe_load(f))
 
     train(config, config_path=args.config)
 

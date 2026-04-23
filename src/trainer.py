@@ -12,9 +12,7 @@ from src.model import create_model
 
 
 class DeepScanClassifier(pl.LightningModule):
-    def __init__(
-        self, num_classes=12, backbone="efficientnet_b0", lr=1e-3, pretrained=True
-    ):
+    def __init__(self, num_classes: int, backbone: str, lr: float, pretrained: bool):
         super().__init__()
         self.save_hyperparameters()
         self.model = create_model(
@@ -55,38 +53,31 @@ class DeepScanClassifier(pl.LightningModule):
         return Adam(self.parameters(), lr=self.lr)
 
 
-def train(config: dict, config_path: str):
+def train(config, config_path: str):
     """Run training with the given config dict.
 
     Creates a timestamped checkpoint directory and saves a copy
     of the config alongside the model checkpoints.
     """
-    model_cfg = config["model"]
-    data_cfg = config["data"]
-    train_cfg = config["training"]
+    dataset_cfg = config.dataset
+    model_cfg = config.model
+    train_cfg = config.training
 
     # Create timestamped checkpoint directory
     timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
-    run_dir = Path("checkpoints") / f"{timestamp}_{model_cfg['backbone']}"
+    run_dir = Path("checkpoints") / f"{timestamp}_{model_cfg.backbone}"
     run_dir.mkdir(parents=True, exist_ok=True)
 
     # Save config alongside checkpoints
     shutil.copy2(config_path, run_dir / "config.yaml")
 
-    data = DeepScanDataModule(
-        revision=data_cfg["dataset_revision"],
-        batch_size=data_cfg["batch_size"],
-        num_workers=data_cfg["num_workers"],
-        val_split=data_cfg["val_split"],
-        test_split=data_cfg["test_split"],
-        image_size=data_cfg["image_size"],
-    )
+    data = DeepScanDataModule(config)
 
     model = DeepScanClassifier(
-        num_classes=model_cfg["num_classes"],
-        backbone=model_cfg["backbone"],
-        lr=train_cfg["lr"],
-        pretrained=model_cfg["pretrained"],
+        num_classes=dataset_cfg.num_classes,
+        backbone=model_cfg.backbone,
+        lr=train_cfg.lr,
+        pretrained=model_cfg.pretrained,
     )
 
     checkpoint_cb = ModelCheckpoint(
@@ -99,10 +90,10 @@ def train(config: dict, config_path: str):
     )
 
     trainer = pl.Trainer(
-        max_epochs=train_cfg["max_epochs"],
+        max_epochs=train_cfg.max_epochs,
         accelerator="auto",
         devices=1,
-        log_every_n_steps=train_cfg["log_every_n_steps"],
+        log_every_n_steps=train_cfg.log_every_n_steps,
         callbacks=[checkpoint_cb],
     )
 

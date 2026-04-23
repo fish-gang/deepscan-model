@@ -25,4 +25,6 @@ for run_dir in sorted(Path("checkpoints").iterdir()):
     # Extract val_acc from filename
     val_acc = best[0].stem.split("val_acc=")[-1] if "val_acc=" in best[0].stem else "?"
 
-    print(f"{backbone:25s}  params={param_count/1e6:.1f}M  size={file_size_mb:.0f}MB  val_acc={val_acc}")
+    print(
+        f"{backbone:25s}  params={param_count / 1e6:.1f}M  size={file_size_mb:.0f}MB  val_acc={val_acc}"
+    )
