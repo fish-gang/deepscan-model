@@ -66,9 +66,7 @@ def export(checkpoint_path: str):
     )
 
     # Save
-    output_path = (
-        ckpt_path.parent / f"DeepScanClassifier_{model_cfg['backbone']}.mlpackage"
-    )
+    output_path = Path("model") / "DeepScanClassifier.mlpackage"
 
     # Write information to the metadata
     mlmodel.user_defined_metadata["backbone"] = model_cfg["backbone"]
