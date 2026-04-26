@@ -23,8 +23,8 @@ jobs:
           
       - name: Copy model artifacts to deepscan-ios
         run: |
-          mkdir -p deepscan-ios/model
-          rsync -a --delete model/ deepscan-ios/model/
+          mkdir -p deepscan-ios/DeepScan/ML
+          rsync -a --delete model/ deepscan-ios/DeepScan/ML/
           
       - name: Configure git user
         run: |
@@ -34,7 +34,7 @@ jobs:
       - name: Commit and push model update
         run: |
           cd deepscan-ios
-          git add model
+          git add DeepScan/ML
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
