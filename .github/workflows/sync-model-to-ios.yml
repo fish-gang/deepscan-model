@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'model/testmodel.mlmodel'
+      - 'model/**'
 
 jobs:
   sync-model:
@@ -21,10 +21,10 @@ jobs:
           token: ${{ secrets.IOS_REPO_TOKEN }}
           path: deepscan-ios
           
-      - name: Copy model file to deepscan-ios
+      - name: Copy model artifacts to deepscan-ios
         run: |
           mkdir -p deepscan-ios/model
-          cp model/testmodel.mlmodel deepscan-ios/model/testmodel.mlmodel
+          rsync -a --delete model/ deepscan-ios/model/
           
       - name: Configure git user
         run: |
@@ -34,7 +34,7 @@ jobs:
       - name: Commit and push model update
         run: |
           cd deepscan-ios
-          git add model/testmodel.mlmodel
+          git add model
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
