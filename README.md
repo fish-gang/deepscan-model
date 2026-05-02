@@ -61,10 +61,10 @@ Run inference on new images using a trained checkpoint:
 
 ```bash
 # Single image
-uv run python predict.py --checkpoint checkpoints/<run>/best.ckpt --image fish.jpg
+uv run python -m scripts.predict --checkpoint checkpoints/<run>/best.ckpt --image fish.jpg
 
 # Folder of images
-uv run python predict.py --checkpoint checkpoints/<run>/best.ckpt --image images/
+uv run python -m scripts.predict --checkpoint checkpoints/<run>/best.ckpt --image images/
 ```
 
 ## Exporting to Core ML Format

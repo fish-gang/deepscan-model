@@ -2,7 +2,7 @@
 Export a trained DeepScan checkpoint to Core ML format.
 
 Usage:
-    uv run python export_coreml.py --checkpoint checkpoints/.../best.ckpt
+    uv run python -m scripts.export_coreml --checkpoint checkpoints/.../best.ckpt
 """
 
 import argparse

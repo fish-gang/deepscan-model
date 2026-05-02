@@ -1,7 +1,7 @@
 [project]
 name = "deepscan-model"
 version = "0.1.0"
-description = "Add your description here"
+description = "Image classification model for tropical reef fish species"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
