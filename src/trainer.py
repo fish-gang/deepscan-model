@@ -1,3 +1,4 @@
+import json
 import shutil
 from datetime import datetime
 from pathlib import Path
@@ -30,8 +31,8 @@ class DeepScanClassifier(pl.LightningModule):
         outputs = self(images)
         loss = self.criterion(outputs, labels)
         acc = (outputs.argmax(dim=1) == labels).float().mean()
-        self.log("train_loss", loss, prog_bar=True)
-        self.log("train_acc", acc, prog_bar=True)
+        self.log("train_loss", loss, prog_bar=True, on_step=False, on_epoch=True)
+        self.log("train_acc", acc, prog_bar=True, on_step=False, on_epoch=True)
         return loss
 
     def validation_step(self, batch):
@@ -52,6 +53,52 @@ class DeepScanClassifier(pl.LightningModule):
 
     def configure_optimizers(self):
         return Adam(self.parameters(), lr=self.lr)
+
+
+class MetricsLogger(pl.Callback):
+    """Saves per-epoch train/val metrics to metrics.json in the run directory."""
+
+    def __init__(self, save_path: Path, backbone: str):
+        self.save_path = save_path
+        self.backbone = backbone
+        self.train_loss: list[float] = []
+        self.train_acc: list[float] = []
+        self.val_loss: list[float] = []
+        self.val_acc: list[float] = []
+        self.test_loss: float | None = None
+        self.test_acc: float | None = None
+
+    def on_validation_epoch_end(self, trainer, pl_module):
+        if trainer.sanity_checking:
+            return
+        m = trainer.callback_metrics
+        self.val_loss.append(float(m["val_loss"]))
+        self.val_acc.append(float(m["val_acc"]))
+        if "train_loss" in m:
+            self.train_loss.append(float(m["train_loss"]))
+            self.train_acc.append(float(m["train_acc"]))
+        self._save()
+
+    def on_test_epoch_end(self, trainer, pl_module):
+        m = trainer.callback_metrics
+        self.test_loss = float(m.get("test_loss", float("nan")))
+        self.test_acc = float(m.get("test_acc", float("nan")))
+        self._save()
+
+    def _save(self):
+        data: dict = {
+            "backbone": self.backbone,
+            "epochs": list(range(1, len(self.val_loss) + 1)),
+            "train_loss": self.train_loss,
+            "train_acc": self.train_acc,
+            "val_loss": self.val_loss,
+            "val_acc": self.val_acc,
+        }
+        if self.test_loss is not None:
+            data["test_loss"] = self.test_loss
+            data["test_acc"] = self.test_acc
+        with open(self.save_path, "w") as f:
+            json.dump(data, f, indent=2)
 
 
 def train(config, config_path: str):
@@ -90,6 +137,11 @@ def train(config, config_path: str):
         save_last=True,
     )
 
+    metrics_cb = MetricsLogger(
+        save_path=run_dir / "metrics.json",
+        backbone=model_cfg.backbone,
+    )
+
     tb_logger = TensorBoardLogger(
         save_dir=str(run_dir),
         name="",
@@ -101,7 +153,7 @@ def train(config, config_path: str):
         accelerator="auto",
         devices=1,
         log_every_n_steps=train_cfg.log_every_n_steps,
-        callbacks=[checkpoint_cb],
+        callbacks=[checkpoint_cb, metrics_cb],
         logger=tb_logger,
     )
 
