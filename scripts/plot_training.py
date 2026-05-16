@@ -72,14 +72,16 @@ def plot(run_paths: list[str], output: str | None = None) -> None:
         epochs = run["epochs"]
 
         # Loss curves
-        ax_loss.plot(epochs, run["train_loss"], color=color, linestyle="--", linewidth=1.5, alpha=0.7, label=f"{label} — train")
+        if run.get("train_loss"):
+            ax_loss.plot(epochs, run["train_loss"], color=color, linestyle="--", linewidth=1.5, alpha=0.7, label=f"{label} — train")
+            ax_loss.fill_between(epochs, run["train_loss"], run["val_loss"], color=color, alpha=0.07)
         ax_loss.plot(epochs, run["val_loss"], color=color, linestyle="-", linewidth=2.2, label=f"{label} — val")
-        ax_loss.fill_between(epochs, run["train_loss"], run["val_loss"], color=color, alpha=0.07)
 
         # Accuracy curves
-        ax_acc.plot(epochs, run["train_acc"], color=color, linestyle="--", linewidth=1.5, alpha=0.7, label=f"{label} — train")
+        if run.get("train_acc"):
+            ax_acc.plot(epochs, run["train_acc"], color=color, linestyle="--", linewidth=1.5, alpha=0.7, label=f"{label} — train")
+            ax_acc.fill_between(epochs, run["train_acc"], run["val_acc"], color=color, alpha=0.07)
         ax_acc.plot(epochs, run["val_acc"], color=color, linestyle="-", linewidth=2.2, label=f"{label} — val")
-        ax_acc.fill_between(epochs, run["train_acc"], run["val_acc"], color=color, alpha=0.07)
 
         # Mark best val accuracy epoch
         best_idx = run["val_acc"].index(max(run["val_acc"]))

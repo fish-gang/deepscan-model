@@ -68,15 +68,18 @@ class MetricsLogger(pl.Callback):
         self.test_loss: float | None = None
         self.test_acc: float | None = None
 
+    def on_train_epoch_end(self, trainer, pl_module):
+        m = trainer.callback_metrics
+        if "train_loss" in m:
+            self.train_loss.append(float(m["train_loss"]))
+            self.train_acc.append(float(m["train_acc"]))
+
     def on_validation_epoch_end(self, trainer, pl_module):
         if trainer.sanity_checking:
             return
         m = trainer.callback_metrics
         self.val_loss.append(float(m["val_loss"]))
         self.val_acc.append(float(m["val_acc"]))
-        if "train_loss" in m:
-            self.train_loss.append(float(m["train_loss"]))
-            self.train_acc.append(float(m["train_acc"]))
         self._save()
 
     def on_test_epoch_end(self, trainer, pl_module):
@@ -130,11 +133,11 @@ def train(config, config_path: str):
 
     checkpoint_cb = ModelCheckpoint(
         dirpath=str(run_dir),
-        filename="best-{epoch:02d}-{val_acc:.3f}",
+        filename="best",
         monitor="val_acc",
         mode="max",
         save_top_k=1,
-        save_last=True,
+        save_last=False,
     )
 
     metrics_cb = MetricsLogger(
@@ -159,3 +162,5 @@ def train(config, config_path: str):
 
     trainer.fit(model, datamodule=data)
     trainer.test(model, datamodule=data)
+
+    return run_dir

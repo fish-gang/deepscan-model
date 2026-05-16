@@ -7,20 +7,29 @@ from torchvision import models
 def create_model(num_classes=14, backbone="efficientnet_b0", pretrained=True):
     weights = "IMAGENET1K_V1" if pretrained else None
 
-    # Lightweight model, very fast but less accurate
-    if backbone == "mobilenet_v3_small":
+    if backbone == "squeezenet1_1":
+        model = models.squeezenet1_1(weights=weights)
+        model.classifier[1] = nn.Conv2d(512, num_classes, kernel_size=1)
+        model.num_classes = num_classes
+
+    elif backbone == "mobilenet_v3_small":
         model = models.mobilenet_v3_small(weights=weights)
-        assert isinstance(model.classifier[3], nn.Linear)
         model.classifier[3] = nn.Linear(model.classifier[3].in_features, num_classes)
+
+    elif backbone == "shufflenet_v2_x1_0":
+        model = models.shufflenet_v2_x1_0(weights=weights)
+        model.fc = nn.Linear(model.fc.in_features, num_classes)
 
     elif backbone == "mobilenet_v3_large":
         model = models.mobilenet_v3_large(weights=weights)
-        assert isinstance(model.classifier[3], nn.Linear)
         model.classifier[3] = nn.Linear(model.classifier[3].in_features, num_classes)
 
-    # Mid-range model, good balance of speed and accuracy
     elif backbone == "efficientnet_b0":
         model = models.efficientnet_b0(weights=weights)
+        model.classifier[1] = nn.Linear(model.classifier[1].in_features, num_classes)
+
+    elif backbone == "efficientnet_b4":
+        model = models.efficientnet_b4(weights=weights)
         model.classifier[1] = nn.Linear(model.classifier[1].in_features, num_classes)
 
     elif backbone == "resnet50":
@@ -30,12 +39,6 @@ def create_model(num_classes=14, backbone="efficientnet_b0", pretrained=True):
     elif backbone == "resnet152":
         model = models.resnet152(weights=weights)
         model.fc = nn.Linear(model.fc.in_features, num_classes)
-
-    # Heavier model, better accuracy but slower
-    elif backbone == "efficientnet_b4":
-        model = models.efficientnet_b4(weights=weights)
-        assert isinstance(model.classifier[1], nn.Linear)
-        model.classifier[1] = nn.Linear(model.classifier[1].in_features, num_classes)
 
     else:
         raise ValueError(f"Unsupported backbone: {backbone}")
