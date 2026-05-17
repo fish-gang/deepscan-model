@@ -20,13 +20,13 @@ model:
 # Data loading
 data:
   batch_size: 32
-  num_workers: 15
+  num_workers: 12
   val_split: 0.15
   test_split: 0.15
   image_size: 224
 
 # Training
 training:
-  max_epochs: 1
+  max_epochs: 40
   lr: 0.0001
   log_every_n_steps: 10

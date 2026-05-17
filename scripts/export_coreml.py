@@ -6,6 +6,7 @@ Usage:
 """
 
 import argparse
+import json
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -24,17 +25,30 @@ def dict_to_namespace(d: dict) -> SimpleNamespace:
     })
 
 
+def _resolve_backbone(run_dir: Path) -> str:
+    """Read backbone from metrics.json (authoritative); fall back to directory name."""
+    metrics_path = run_dir / "metrics.json"
+    if metrics_path.exists():
+        with open(metrics_path) as f:
+            return json.load(f)["backbone"]
+    # Directory name format: YYYY-MM-DD_HHMMSS_<backbone>
+    return "_".join(run_dir.name.split("_")[2:])
+
+
 def export(checkpoint_path: str):
     ckpt_path = Path(checkpoint_path)
-    config_path = ckpt_path.parent / "config.yaml"
+    run_dir = ckpt_path.parent
+    config_path = run_dir / "config.yaml"
 
     with open(config_path) as f:
         config = dict_to_namespace(yaml.safe_load(f))
 
+    backbone = _resolve_backbone(run_dir)
+
     # Load model
     model = create_model(
         num_classes=config.dataset.num_classes,
-        backbone=config.model.backbone,
+        backbone=backbone,
         pretrained=False,
     )
 
@@ -78,7 +92,7 @@ def export(checkpoint_path: str):
     # Metadata
     mlmodel.short_description = (
         f"Tropical reef fish classifier — {config.dataset.num_classes} classes, "
-        f"{config.model.backbone} backbone, trained on {config.dataset.repo_id} {config.dataset.revision}"
+        f"{backbone} backbone, trained on {config.dataset.repo_id} {config.dataset.revision}"
     )
     mlmodel.input_description["image"] = (
         f"RGB image ({image_size}x{image_size}), normalised with "
@@ -91,7 +105,7 @@ def export(checkpoint_path: str):
         "Class probabilities for all 14 classes"
     )
 
-    mlmodel.user_defined_metadata["backbone"] = config.model.backbone
+    mlmodel.user_defined_metadata["backbone"] = backbone
     mlmodel.user_defined_metadata["num_classes"] = str(config.dataset.num_classes)
     mlmodel.user_defined_metadata["image_size"] = str(image_size)
     mlmodel.user_defined_metadata["dataset_revision"] = config.dataset.revision
