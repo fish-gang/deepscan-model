@@ -405,3 +405,7 @@ checkpoints/
 # Images to test the model
 images/
 test_images/
+
+# YOLO output
+runs/
+test_photos/

@@ -15,6 +15,8 @@ dependencies = [
     "coremltools>=9.0",
     "python-dotenv>=1.2.2",
     "matplotlib>=3.10.9",
+    "ultralytics>=8.4.47",
+    "clip",
 ]
 
 [[tool.uv.index]]
@@ -23,5 +25,7 @@ url = "https://download.pytorch.org/whl/cu128"
 explicit = true
 
 [tool.uv.sources]
-torch = [{ index = "pytorch-cu128" }]
-torchvision = [{ index = "pytorch-cu128" }]
+# CUDA wheels on Linux (training rigs); default PyPI on macOS (MPS-enabled).
+torch = [{ index = "pytorch-cu128", marker = "sys_platform == 'linux'" }]
+torchvision = [{ index = "pytorch-cu128", marker = "sys_platform == 'linux'" }]
+clip = { git = "https://github.com/ultralytics/CLIP.git" }
