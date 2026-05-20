@@ -69,8 +69,14 @@ uv run python -m scripts.predict --checkpoint checkpoints/<run>/best.ckpt --imag
 
 ## Exporting to Core ML Format
 
-Use the `scripts/export_coreml.py` script to export any model checkpoint to Core ML format:
+**Classifier** - run after each training run:
 
 ```bash
-uv run python -m scripts.export_coreml --checkpoint checkpoints/<run>/best.ckpt
+uv run python -m scripts.export_classifier --checkpoint checkpoints/<run>/best.ckpt
+```
+
+**Detector** - run once when swapping the YOLO model. Place the `.pt` file in `detector/` first (default: `yolov8m-worldv2.pt`, override with `--weights`):
+
+```bash
+uv run python -m scripts.export_detector --export
 ```
