@@ -61,12 +61,22 @@ def _export(model: YOLOWorld) -> Path:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--predict", action="store_true",
-                        help="Run inference on test_photos/ and save annotated JPGs")
-    parser.add_argument("--export", action="store_true",
-                        help="Export the model to CoreML (model/FishDetector.mlpackage)")
-    parser.add_argument("--weights", type=str, default=str(WEIGHTS_PATH),
-                        help=f"Path to YOLO-World .pt file (default: {WEIGHTS_PATH})")
+    parser.add_argument(
+        "--predict",
+        action="store_true",
+        help="Run inference on test_photos/ and save annotated JPGs",
+    )
+    parser.add_argument(
+        "--export",
+        action="store_true",
+        help="Export the model to CoreML (model/FishDetector.mlpackage)",
+    )
+    parser.add_argument(
+        "--weights",
+        type=str,
+        default=str(WEIGHTS_PATH),
+        help=f"Path to YOLO-World .pt file (default: {WEIGHTS_PATH})",
+    )
     args = parser.parse_args()
 
     if not (args.predict or args.export):
@@ -76,8 +86,10 @@ def main() -> None:
     weights_path = Path(args.weights)
 
     if not weights_path.exists():
-        print(f"No detector weights at {weights_path}. "
-              "Download a YOLO-World .pt and place it there.")
+        print(
+            f"No detector weights at {weights_path}. "
+            "Download a YOLO-World .pt and place it there."
+        )
         return
 
     print(f"Loading {weights_path}...")

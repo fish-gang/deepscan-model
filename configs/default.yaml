@@ -1,3 +1,6 @@
+# Session name — used to group checkpoints and plots (change per training run)
+session: "s2"
+
 # Dataset
 dataset:
   repo_id: "fish-gang/deepscan-dataset"

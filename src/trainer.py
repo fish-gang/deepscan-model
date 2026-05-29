@@ -3,25 +3,32 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 
-import pytorch_lightning as pl
+import torch
 import torch.nn as nn
+import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
-from torch.optim import Adam
 
 from src.data import DeepScanDataModule
 from src.model import create_model
 
 
 class DeepScanClassifier(pl.LightningModule):
-    def __init__(self, num_classes: int, backbone: str, lr: float, pretrained: bool):
+    def __init__(
+        self,
+        num_classes: int,
+        backbone: str,
+        lr: float,
+        pretrained: bool,
+        max_epochs: int,
+        class_weights: torch.Tensor | None = None,
+    ):
         super().__init__()
-        self.save_hyperparameters()
+        self.save_hyperparameters(ignore=["class_weights"])
         self.model = create_model(
             num_classes=num_classes, backbone=backbone, pretrained=pretrained
         )
-        self.criterion = nn.CrossEntropyLoss()
-        self.lr = lr
+        self.criterion = nn.CrossEntropyLoss(weight=class_weights, label_smoothing=0.1)
 
     def forward(self, x):
         return self.model(x)
@@ -52,7 +59,16 @@ class DeepScanClassifier(pl.LightningModule):
         self.log("test_acc", acc)
 
     def configure_optimizers(self):
-        return Adam(self.parameters(), lr=self.lr)
+        optimizer = torch.optim.AdamW(
+            self.parameters(), lr=self.hparams.lr, weight_decay=1e-4
+        )
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            optimizer, T_max=self.hparams.max_epochs
+        )
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {"scheduler": scheduler, "interval": "epoch"},
+        }
 
 
 class MetricsLogger(pl.Callback):
@@ -107,28 +123,33 @@ class MetricsLogger(pl.Callback):
 def train(config, config_path: str):
     """Run training with the given config dict.
 
-    Creates a timestamped checkpoint directory and saves a copy
-    of the config alongside the model checkpoints.
+    Creates a timestamped checkpoint directory under checkpoints/{session}/
+    and saves a copy of the config alongside the model checkpoints.
     """
     dataset_cfg = config.dataset
     model_cfg = config.model
     train_cfg = config.training
+    session = getattr(config, "session", "default")
 
-    # Create timestamped checkpoint directory
+    # Set up data first so we can compute class weights before model creation
+    data = DeepScanDataModule(config)
+    data.setup("fit")
+
+    # Create timestamped checkpoint directory grouped by session
     timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
-    run_dir = Path("checkpoints") / f"{timestamp}_{model_cfg.backbone}"
+    run_dir = Path("checkpoints") / session / f"{timestamp}_{model_cfg.backbone}"
     run_dir.mkdir(parents=True, exist_ok=True)
 
     # Save config alongside checkpoints
     shutil.copy2(config_path, run_dir / "config.yaml")
-
-    data = DeepScanDataModule(config)
 
     model = DeepScanClassifier(
         num_classes=dataset_cfg.num_classes,
         backbone=model_cfg.backbone,
         lr=train_cfg.lr,
         pretrained=model_cfg.pretrained,
+        max_epochs=train_cfg.max_epochs,
+        class_weights=data.class_weights(),
     )
 
     checkpoint_cb = ModelCheckpoint(

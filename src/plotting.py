@@ -7,30 +7,41 @@ import matplotlib.ticker as ticker
 
 from src.model import create_model
 
-_PALETTE = ["#1f77b4", "#d62728", "#2ca02c", "#ff7f0e", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f"]
+_PALETTE = [
+    "#1f77b4",
+    "#d62728",
+    "#2ca02c",
+    "#ff7f0e",
+    "#9467bd",
+    "#8c564b",
+    "#e377c2",
+    "#7f7f7f",
+]
 _GREEN = "#2ca02c"
 _BLUE = "#1f77b4"
 
-plt.rcParams.update({
-    "figure.facecolor": "white",
-    "axes.facecolor": "#F8F9FA",
-    "axes.grid": True,
-    "grid.color": "#DDDDDD",
-    "grid.linestyle": "-",
-    "grid.linewidth": 0.6,
-    "axes.spines.top": False,
-    "axes.spines.right": False,
-    "font.family": "sans-serif",
-    "font.size": 11,
-    "axes.titlesize": 13,
-    "axes.titleweight": "bold",
-    "axes.labelsize": 11,
-    "xtick.labelsize": 10,
-    "ytick.labelsize": 10,
-    "legend.fontsize": 9,
-    "legend.framealpha": 0.9,
-    "lines.linewidth": 2.0,
-})
+plt.rcParams.update(
+    {
+        "figure.facecolor": "white",
+        "axes.facecolor": "#F8F9FA",
+        "axes.grid": True,
+        "grid.color": "#DDDDDD",
+        "grid.linestyle": "-",
+        "grid.linewidth": 0.6,
+        "axes.spines.top": False,
+        "axes.spines.right": False,
+        "font.family": "sans-serif",
+        "font.size": 11,
+        "axes.titlesize": 13,
+        "axes.titleweight": "bold",
+        "axes.labelsize": 11,
+        "xtick.labelsize": 10,
+        "ytick.labelsize": 10,
+        "legend.fontsize": 9,
+        "legend.framealpha": 0.9,
+        "lines.linewidth": 2.0,
+    }
+)
 
 
 def _load_metrics(run_path: Path) -> dict:
@@ -82,21 +93,66 @@ def plot_training_curves(run_paths: list[str], output: str | None = None) -> Non
         epochs = run["epochs"]
 
         if run.get("train_loss"):
-            ax_loss.plot(epochs, run["train_loss"], color=color, linestyle="--", linewidth=1.5, alpha=0.7, label=f"{label} — train")
-            ax_loss.fill_between(epochs, run["train_loss"], run["val_loss"], color=color, alpha=0.07)
-        ax_loss.plot(epochs, run["val_loss"], color=color, linestyle="-", linewidth=2.2, label=f"{label} — val")
+            ax_loss.plot(
+                epochs,
+                run["train_loss"],
+                color=color,
+                linestyle="--",
+                linewidth=1.5,
+                alpha=0.7,
+                label=f"{label} — train",
+            )
+            ax_loss.fill_between(
+                epochs, run["train_loss"], run["val_loss"], color=color, alpha=0.07
+            )
+        ax_loss.plot(
+            epochs,
+            run["val_loss"],
+            color=color,
+            linestyle="-",
+            linewidth=2.2,
+            label=f"{label} — val",
+        )
 
         if run.get("train_acc"):
-            ax_acc.plot(epochs, run["train_acc"], color=color, linestyle="--", linewidth=1.5, alpha=0.7, label=f"{label} — train")
-            ax_acc.fill_between(epochs, run["train_acc"], run["val_acc"], color=color, alpha=0.07)
-        ax_acc.plot(epochs, run["val_acc"], color=color, linestyle="-", linewidth=2.2, label=f"{label} — val")
+            ax_acc.plot(
+                epochs,
+                run["train_acc"],
+                color=color,
+                linestyle="--",
+                linewidth=1.5,
+                alpha=0.7,
+                label=f"{label} — train",
+            )
+            ax_acc.fill_between(
+                epochs, run["train_acc"], run["val_acc"], color=color, alpha=0.07
+            )
+        ax_acc.plot(
+            epochs,
+            run["val_acc"],
+            color=color,
+            linestyle="-",
+            linewidth=2.2,
+            label=f"{label} — val",
+        )
 
         best_idx = run["val_acc"].index(max(run["val_acc"]))
-        ax_acc.scatter(epochs[best_idx], run["val_acc"][best_idx], color=color, s=70, zorder=5, marker="*")
+        ax_acc.scatter(
+            epochs[best_idx],
+            run["val_acc"][best_idx],
+            color=color,
+            s=70,
+            zorder=5,
+            marker="*",
+        )
 
         if "test_acc" in run:
             ax_acc.axhline(
-                run["test_acc"], color=color, linestyle=":", linewidth=1.3, alpha=0.6,
+                run["test_acc"],
+                color=color,
+                linestyle=":",
+                linewidth=1.3,
+                alpha=0.6,
                 label=f"{label} — test {run['test_acc']:.1%}",
             )
 
@@ -104,7 +160,14 @@ def plot_training_curves(run_paths: list[str], output: str | None = None) -> Non
     ax_loss.set_xlabel("Epoch")
     ax_loss.set_ylabel("Loss")
     ax_loss.xaxis.set_major_locator(ticker.MaxNLocator(integer=True))
-    ax_loss.legend(loc="upper right")
+    ax_loss.legend(
+        loc="upper right",
+        fontsize=7,
+        ncols=2,
+        handlelength=1.2,
+        handletextpad=0.4,
+        columnspacing=0.8,
+    )
 
     ax_acc.set_title("Accuracy")
     ax_acc.set_xlabel("Epoch")
@@ -113,7 +176,14 @@ def plot_training_curves(run_paths: list[str], output: str | None = None) -> Non
     ax_acc.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1.0))
     min_acc = min(min(r["val_acc"]) for r in runs)
     ax_acc.set_ylim(bottom=max(0.0, min_acc - 0.05))
-    ax_acc.legend(loc="lower right")
+    ax_acc.legend(
+        loc="lower right",
+        fontsize=7,
+        ncols=2,
+        handlelength=1.2,
+        handletextpad=0.4,
+        columnspacing=0.8,
+    )
 
     _save_or_show(fig, output)
 
@@ -148,23 +218,37 @@ def plot_model_comparison(run_paths: list[str], output: str | None = None) -> No
     y = list(range(len(backbones)))
 
     # Accuracy panel
-    bars = ax_acc.barh(y, [a * 100 for a in test_accs], color=colors, alpha=0.85, height=0.55)
+    bars = ax_acc.barh(
+        y, [a * 100 for a in test_accs], color=colors, alpha=0.85, height=0.55
+    )
     ax_acc.scatter(
-        [a * 100 for a in val_accs], y,
-        color=colors, marker="|", s=250, linewidths=2.5, zorder=5,
+        [a * 100 for a in val_accs],
+        y,
+        color=colors,
+        marker="|",
+        s=250,
+        linewidths=2.5,
+        zorder=5,
         label="Best val accuracy",
     )
     for bar, acc in zip(bars, test_accs):
         ax_acc.text(
-            bar.get_width() - 0.3, bar.get_y() + bar.get_height() / 2,
-            f"{acc:.1%}", va="center", ha="right", fontsize=10,
-            color="white", fontweight="bold",
+            bar.get_width() - 0.3,
+            bar.get_y() + bar.get_height() / 2,
+            f"{acc:.1%}",
+            va="center",
+            ha="right",
+            fontsize=10,
+            color="white",
+            fontweight="bold",
         )
     ax_acc.annotate(
         "★ best",
         xy=(test_accs[best_idx] * 100, best_idx),
         xytext=(test_accs[best_idx] * 100 + 0.4, best_idx + 0.3),
-        fontsize=9, color=_GREEN, fontweight="bold",
+        fontsize=9,
+        color=_GREEN,
+        fontweight="bold",
     )
     ax_acc.set_yticks(y)
     ax_acc.set_yticklabels(labels)
@@ -178,8 +262,12 @@ def plot_model_comparison(run_paths: list[str], output: str | None = None) -> No
     ax_params.barh(y, params, color=colors, alpha=0.85, height=0.55)
     for i, p in enumerate(params):
         ax_params.text(
-            p + max(params) * 0.02, i,
-            f"{p:.1f}M", va="center", ha="left", fontsize=10,
+            p + max(params) * 0.02,
+            i,
+            f"{p:.1f}M",
+            va="center",
+            ha="left",
+            fontsize=10,
         )
     ax_params.set_yticks(y)
     ax_params.set_yticklabels([])
