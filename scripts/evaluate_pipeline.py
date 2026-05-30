@@ -40,6 +40,7 @@ _COLORS = ["#00FF7F", "#FF6B6B", "#4FC3F7", "#FFD54F"]
 
 def load_label_names(cache_dir="data/hf_cache") -> list[str]:
     from datasets import load_from_disk
+
     ds = load_from_disk(cache_dir)
     return ds.features["label"].names
 
@@ -74,7 +75,9 @@ def load_classifier(ckpt_path: Path):
     return model, image_size, label
 
 
-def classify_crops(model, crops: list[Image.Image], image_size: int, top_k: int) -> list[list[tuple]]:
+def classify_crops(
+    model, crops: list[Image.Image], image_size: int, top_k: int
+) -> list[list[tuple]]:
     """Classify a list of PIL crops. Returns list of [(prob, idx), ...] per crop."""
     transform = val_transforms(image_size)
     tensors = torch.stack([transform(c) for c in crops])
@@ -132,7 +135,9 @@ def save_crop_with_labels(
         color = _COLORS[i % len(_COLORS)]
 
         ty = img_h + PADDING + i * LINE_H
-        draw.text((PADDING, ty), f"[{model_label}]", fill=(100, 100, 100), font=font_conf)
+        draw.text(
+            (PADDING, ty), f"[{model_label}]", fill=(100, 100, 100), font=font_conf
+        )
 
         label_x = PADDING + 160
         draw.text((label_x, ty), species, fill=(30, 30, 30), font=font_label)
@@ -147,12 +152,31 @@ def save_crop_with_labels(
 
 def main():
     parser = argparse.ArgumentParser(description="Evaluate YOLO + classifier pipeline")
-    parser.add_argument("--images", type=str, required=True, help="Image file or directory")
-    parser.add_argument("--checkpoints", type=str, nargs="+", required=True, help="One or more .ckpt paths")
-    parser.add_argument("--output", type=str, default=None, help="Directory to save annotated images and results.json")
-    parser.add_argument("--top-k", type=int, default=3, help="Top-k predictions per box")
-    parser.add_argument("--conf", type=float, default=DETECTOR_CONF, help="YOLO confidence threshold")
-    parser.add_argument("--no-detect", action="store_true", help="Skip YOLO, classify full image")
+    parser.add_argument(
+        "--images", type=str, required=True, help="Image file or directory"
+    )
+    parser.add_argument(
+        "--checkpoints",
+        type=str,
+        nargs="+",
+        required=True,
+        help="One or more .ckpt paths",
+    )
+    parser.add_argument(
+        "--output",
+        type=str,
+        default=None,
+        help="Directory to save annotated images and results.json",
+    )
+    parser.add_argument(
+        "--top-k", type=int, default=3, help="Top-k predictions per box"
+    )
+    parser.add_argument(
+        "--conf", type=float, default=DETECTOR_CONF, help="YOLO confidence threshold"
+    )
+    parser.add_argument(
+        "--no-detect", action="store_true", help="Skip YOLO, classify full image"
+    )
     args = parser.parse_args()
 
     out_dir = Path(args.output) if args.output else None
@@ -175,7 +199,9 @@ def main():
 
     image_path = Path(args.images)
     if image_path.is_dir():
-        files = sorted(p for p in image_path.iterdir() if p.suffix.lower() in IMAGE_EXTENSIONS)
+        files = sorted(
+            p for p in image_path.iterdir() if p.suffix.lower() in IMAGE_EXTENSIONS
+        )
     else:
         files = [image_path]
 
@@ -194,7 +220,9 @@ def main():
             raw_confs = [1.0]
             crops = [img]
         else:
-            det_result = detector(img, imgsz=DETECTOR_IMGSZ, conf=args.conf, verbose=False)[0]
+            det_result = detector(
+                img, imgsz=DETECTOR_IMGSZ, conf=args.conf, verbose=False
+            )[0]
             boxes = det_result.boxes
             if len(boxes) == 0:
                 print("  no fish detected\n")
@@ -210,7 +238,9 @@ def main():
         # classify all crops for each model
         model_preds = {}
         for model, image_size, model_label in classifiers:
-            model_preds[model_label] = classify_crops(model, crops, image_size, args.top_k)
+            model_preds[model_label] = classify_crops(
+                model, crops, image_size, args.top_k
+            )
 
         # build detection records
         detections = []
@@ -231,17 +261,18 @@ def main():
 
         # print to terminal
         for i, det in enumerate(detections):
-            print(f"\n  box {i+1} (YOLO conf {det['yolo_conf']:.2f})")
+            print(f"\n  box {i + 1} (YOLO conf {det['yolo_conf']:.2f})")
             for model_label in model_labels:
                 top_str = "  │  ".join(
-                    f"{p['label']} {p['prob']:.1%}" for p in det["predictions"][model_label]
+                    f"{p['label']} {p['prob']:.1%}"
+                    for p in det["predictions"][model_label]
                 )
                 print(f"    [{model_label}]  {top_str}")
 
         # save one crop per detection with labels drawn in
         if out_dir:
             for i, (det, crop) in enumerate(zip(detections, crops)):
-                out_name = f"{img_path.stem}_box{i+1}{img_path.suffix}"
+                out_name = f"{img_path.stem}_box{i + 1}{img_path.suffix}"
                 save_crop_with_labels(crop, det, model_labels, out_dir / out_name)
 
     print(sep)

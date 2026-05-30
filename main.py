@@ -32,8 +32,12 @@ def main():
     revision = config.dataset.revision.replace("/", "-")
     run_dir_strs = [str(r) for r in run_dirs]
 
-    plot_training_curves(run_dir_strs, output=f"plots/{session}_{revision}_comparison.png")
-    plot_model_comparison(run_dir_strs, output=f"plots/{session}_{revision}_summary.png")
+    plot_training_curves(
+        run_dir_strs, output=f"plots/{session}_{revision}_comparison.png"
+    )
+    plot_model_comparison(
+        run_dir_strs, output=f"plots/{session}_{revision}_summary.png"
+    )
 
     if not args.no_export:
         export_best(run_dirs, config)

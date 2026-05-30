@@ -80,20 +80,20 @@ def _save_or_show(fig, output: str | None) -> None:
     plt.close(fig)
 
 
-def plot_training_curves(run_paths: list[str], output: str | None = None) -> None:
-    paths = [Path(p) for p in run_paths]
-    runs = [_load_metrics(p) for p in paths]
-    labels = _run_labels(runs, paths)
+_LEGEND_KW = dict(
+    fontsize=7, ncols=2, handlelength=1.2, handletextpad=0.4, columnspacing=0.8
+)
 
-    fig, (ax_loss, ax_acc) = plt.subplots(1, 2, figsize=(13, 5))
-    fig.suptitle("DeepScan — Training History", fontsize=15, fontweight="bold", y=1.01)
+
+def _plot_loss(runs: list[dict], labels: list[str], output: str | None) -> None:
+    fig, ax = plt.subplots(figsize=(8, 5))
+    fig.suptitle("DeepScan — Loss", fontsize=15, fontweight="bold", y=1.01)
 
     for i, (run, label) in enumerate(zip(runs, labels)):
         color = _PALETTE[i % len(_PALETTE)]
         epochs = run["epochs"]
-
         if run.get("train_loss"):
-            ax_loss.plot(
+            ax.plot(
                 epochs,
                 run["train_loss"],
                 color=color,
@@ -102,10 +102,10 @@ def plot_training_curves(run_paths: list[str], output: str | None = None) -> Non
                 alpha=0.7,
                 label=f"{label} — train",
             )
-            ax_loss.fill_between(
+            ax.fill_between(
                 epochs, run["train_loss"], run["val_loss"], color=color, alpha=0.07
             )
-        ax_loss.plot(
+        ax.plot(
             epochs,
             run["val_loss"],
             color=color,
@@ -114,8 +114,22 @@ def plot_training_curves(run_paths: list[str], output: str | None = None) -> Non
             label=f"{label} — val",
         )
 
+    ax.set_xlabel("Epoch")
+    ax.set_ylabel("Loss")
+    ax.xaxis.set_major_locator(ticker.MaxNLocator(integer=True))
+    ax.legend(loc="upper right", **_LEGEND_KW)
+    _save_or_show(fig, output)
+
+
+def _plot_acc(runs: list[dict], labels: list[str], output: str | None) -> None:
+    fig, ax = plt.subplots(figsize=(8, 5))
+    fig.suptitle("DeepScan — Accuracy", fontsize=15, fontweight="bold", y=1.01)
+
+    for i, (run, label) in enumerate(zip(runs, labels)):
+        color = _PALETTE[i % len(_PALETTE)]
+        epochs = run["epochs"]
         if run.get("train_acc"):
-            ax_acc.plot(
+            ax.plot(
                 epochs,
                 run["train_acc"],
                 color=color,
@@ -124,10 +138,10 @@ def plot_training_curves(run_paths: list[str], output: str | None = None) -> Non
                 alpha=0.7,
                 label=f"{label} — train",
             )
-            ax_acc.fill_between(
+            ax.fill_between(
                 epochs, run["train_acc"], run["val_acc"], color=color, alpha=0.07
             )
-        ax_acc.plot(
+        ax.plot(
             epochs,
             run["val_acc"],
             color=color,
@@ -137,7 +151,7 @@ def plot_training_curves(run_paths: list[str], output: str | None = None) -> Non
         )
 
         best_idx = run["val_acc"].index(max(run["val_acc"]))
-        ax_acc.scatter(
+        ax.scatter(
             epochs[best_idx],
             run["val_acc"][best_idx],
             color=color,
@@ -147,7 +161,7 @@ def plot_training_curves(run_paths: list[str], output: str | None = None) -> Non
         )
 
         if "test_acc" in run:
-            ax_acc.axhline(
+            ax.axhline(
                 run["test_acc"],
                 color=color,
                 linestyle=":",
@@ -156,36 +170,29 @@ def plot_training_curves(run_paths: list[str], output: str | None = None) -> Non
                 label=f"{label} — test {run['test_acc']:.1%}",
             )
 
-    ax_loss.set_title("Loss")
-    ax_loss.set_xlabel("Epoch")
-    ax_loss.set_ylabel("Loss")
-    ax_loss.xaxis.set_major_locator(ticker.MaxNLocator(integer=True))
-    ax_loss.legend(
-        loc="upper right",
-        fontsize=7,
-        ncols=2,
-        handlelength=1.2,
-        handletextpad=0.4,
-        columnspacing=0.8,
-    )
-
-    ax_acc.set_title("Accuracy")
-    ax_acc.set_xlabel("Epoch")
-    ax_acc.set_ylabel("Accuracy")
-    ax_acc.xaxis.set_major_locator(ticker.MaxNLocator(integer=True))
-    ax_acc.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1.0))
-    min_acc = min(min(r["val_acc"]) for r in runs)
-    ax_acc.set_ylim(bottom=max(0.0, min_acc - 0.05))
-    ax_acc.legend(
-        loc="lower right",
-        fontsize=7,
-        ncols=2,
-        handlelength=1.2,
-        handletextpad=0.4,
-        columnspacing=0.8,
-    )
-
+    ax.set_xlabel("Epoch")
+    ax.set_ylabel("Accuracy")
+    ax.xaxis.set_major_locator(ticker.MaxNLocator(integer=True))
+    ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1.0))
+    max_acc = max(max(max(r["val_acc"]), r.get("test_acc", 0)) for r in runs)
+    ax.set_ylim(bottom=0.48, top=min(1.02, max_acc + 0.03))
+    ax.legend(loc="lower right", **_LEGEND_KW)
     _save_or_show(fig, output)
+
+
+def plot_training_curves(run_paths: list[str], output: str | None = None) -> None:
+    paths = [Path(p) for p in run_paths]
+    runs = [_load_metrics(p) for p in paths]
+    labels = _run_labels(runs, paths)
+
+    if output:
+        stem = Path(output).with_suffix("")
+        suffix = Path(output).suffix or ".png"
+        _plot_loss(runs, labels, f"{stem}_loss{suffix}")
+        _plot_acc(runs, labels, f"{stem}_acc{suffix}")
+    else:
+        _plot_loss(runs, labels, None)
+        _plot_acc(runs, labels, None)
 
 
 def plot_model_comparison(run_paths: list[str], output: str | None = None) -> None:
