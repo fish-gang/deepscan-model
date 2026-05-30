@@ -87,7 +87,7 @@ _LEGEND_KW = dict(
 
 def _plot_loss(runs: list[dict], labels: list[str], output: str | None) -> None:
     fig, ax = plt.subplots(figsize=(8, 5))
-    fig.suptitle("DeepScan — Loss", fontsize=15, fontweight="bold", y=1.01)
+
 
     for i, (run, label) in enumerate(zip(runs, labels)):
         color = _PALETTE[i % len(_PALETTE)]
@@ -123,7 +123,7 @@ def _plot_loss(runs: list[dict], labels: list[str], output: str | None) -> None:
 
 def _plot_acc(runs: list[dict], labels: list[str], output: str | None) -> None:
     fig, ax = plt.subplots(figsize=(8, 5))
-    fig.suptitle("DeepScan — Accuracy", fontsize=15, fontweight="bold", y=1.01)
+
 
     for i, (run, label) in enumerate(zip(runs, labels)):
         color = _PALETTE[i % len(_PALETTE)]
@@ -174,8 +174,7 @@ def _plot_acc(runs: list[dict], labels: list[str], output: str | None) -> None:
     ax.set_ylabel("Accuracy")
     ax.xaxis.set_major_locator(ticker.MaxNLocator(integer=True))
     ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1.0))
-    max_acc = max(max(max(r["val_acc"]), r.get("test_acc", 0)) for r in runs)
-    ax.set_ylim(bottom=0.48, top=min(1.02, max_acc + 0.03))
+    ax.set_ylim(bottom=0.48, top=1.02)
     ax.legend(loc="lower right", **_LEGEND_KW)
     _save_or_show(fig, output)
 
@@ -220,7 +219,6 @@ def plot_model_comparison(run_paths: list[str], output: str | None = None) -> No
     fig, (ax_acc, ax_params) = plt.subplots(
         1, 2, figsize=(12, fig_height), gridspec_kw={"width_ratios": [2, 1]}
     )
-    fig.suptitle("DeepScan — Model Comparison", fontsize=15, fontweight="bold")
 
     y = list(range(len(backbones)))
 
