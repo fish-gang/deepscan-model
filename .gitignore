@@ -32,3 +32,4 @@ images/
 test_images/
 test_photos/
 *.log
+results/
