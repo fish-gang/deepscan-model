@@ -21,14 +21,13 @@ class DeepScanClassifier(pl.LightningModule):
         lr: float,
         pretrained: bool,
         max_epochs: int,
-        class_weights: torch.Tensor | None = None,
     ):
         super().__init__()
-        self.save_hyperparameters(ignore=["class_weights"])
+        self.save_hyperparameters()
         self.model = create_model(
             num_classes=num_classes, backbone=backbone, pretrained=pretrained
         )
-        self.criterion = nn.CrossEntropyLoss(weight=class_weights, label_smoothing=0.1)
+        self.criterion = nn.CrossEntropyLoss()
 
     def forward(self, x):
         return self.model(x)
@@ -131,9 +130,7 @@ def train(config, config_path: str):
     train_cfg = config.training
     session = getattr(config, "session", "default")
 
-    # Set up data first so we can compute class weights before model creation
     data = DeepScanDataModule(config)
-    data.setup("fit")
 
     # Create timestamped checkpoint directory grouped by session
     timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
@@ -149,7 +146,6 @@ def train(config, config_path: str):
         lr=train_cfg.lr,
         pretrained=model_cfg.pretrained,
         max_epochs=train_cfg.max_epochs,
-        class_weights=data.class_weights(),
     )
 
     checkpoint_cb = ModelCheckpoint(

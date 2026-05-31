@@ -23,21 +23,23 @@ import matplotlib.pyplot as plt
 from src.data import DeepScanDataModule
 from src.model import create_model
 
-plt.rcParams.update({
-    "figure.facecolor": "white",
-    "axes.facecolor": "#F8F9FA",
-    "axes.grid": True,
-    "grid.color": "#DDDDDD",
-    "grid.linestyle": "-",
-    "grid.linewidth": 0.6,
-    "axes.spines.top": False,
-    "axes.spines.right": False,
-    "font.family": "sans-serif",
-    "font.size": 10,
-})
+plt.rcParams.update(
+    {
+        "figure.facecolor": "white",
+        "axes.facecolor": "#F8F9FA",
+        "axes.grid": True,
+        "grid.color": "#DDDDDD",
+        "grid.linestyle": "-",
+        "grid.linewidth": 0.6,
+        "axes.spines.top": False,
+        "axes.spines.right": False,
+        "font.family": "sans-serif",
+        "font.size": 10,
+    }
+)
 
 GREEN = "#2ca02c"
-RED   = "#d62728"
+RED = "#d62728"
 
 
 def dict_to_namespace(d: dict) -> SimpleNamespace:
@@ -53,7 +55,9 @@ def load_model_and_config(ckpt_path: Path):
     with open(run_dir / "metrics.json") as f:
         metrics = json.load(f)
     backbone = metrics["backbone"]
-    model = create_model(num_classes=config.dataset.num_classes, backbone=backbone, pretrained=False)
+    model = create_model(
+        num_classes=config.dataset.num_classes, backbone=backbone, pretrained=False
+    )
     checkpoint = torch.load(ckpt_path, map_location="cpu", weights_only=True)
     state_dict = {
         k.replace("model.", "", 1): v
@@ -65,7 +69,9 @@ def load_model_and_config(ckpt_path: Path):
     return model, config, backbone
 
 
-def get_f1_scores(model, data: DeepScanDataModule, label_names: list[str]) -> dict[str, float]:
+def get_f1_scores(
+    model, data: DeepScanDataModule, label_names: list[str]
+) -> dict[str, float]:
     all_preds, all_labels = [], []
     with torch.no_grad():
         for images, labels in data.test_dataloader():
@@ -73,15 +79,21 @@ def get_f1_scores(model, data: DeepScanDataModule, label_names: list[str]) -> di
             all_preds.extend(preds.tolist())
             all_labels.extend(labels.tolist())
     report = classification_report(
-        np.array(all_labels), np.array(all_preds),
-        target_names=label_names, output_dict=True
+        np.array(all_labels),
+        np.array(all_preds),
+        target_names=label_names,
+        output_dict=True,
     )
     return {name: report[name]["f1-score"] for name in label_names if name in report}
 
 
 def main():
-    parser = argparse.ArgumentParser(description="F1-score delta plot between two checkpoints")
-    parser.add_argument("--s1", type=str, required=True, help="Baseline checkpoint (s1)")
+    parser = argparse.ArgumentParser(
+        description="F1-score delta plot between two checkpoints"
+    )
+    parser.add_argument(
+        "--s1", type=str, required=True, help="Baseline checkpoint (s1)"
+    )
     parser.add_argument("--s2", type=str, required=True, help="New checkpoint (s2)")
     parser.add_argument("--output", type=str, default="plots/f1_delta.png")
     args = parser.parse_args()
@@ -101,10 +113,14 @@ def main():
     f1_s2 = get_f1_scores(model_s2, data, label_names)
 
     # compute deltas, sort by delta ascending
-    deltas = {name: f1_s2[name] - f1_s1[name] for name in label_names if name in f1_s1 and name in f1_s2}
+    deltas = {
+        name: f1_s2[name] - f1_s1[name]
+        for name in label_names
+        if name in f1_s1 and name in f1_s2
+    }
     sorted_items = sorted(deltas.items(), key=lambda x: x[1])
-    names  = [name.replace("_", " ") for name, _ in sorted_items]
-    values = [v for _, v in sorted_items]
+    names = [name.replace("_", " ") for name, _ in sorted_items]
+    values = [v * 100 for _, v in sorted_items]  # convert to percentage points
     colors = [GREEN if v >= 0 else RED for v in values]
 
     fig, ax = plt.subplots(figsize=(8, max(4, len(names) * 0.52)))
@@ -115,22 +131,37 @@ def main():
         x = bar.get_width()
         ha = "left" if val >= 0 else "right"
         offset = 0.002 if val >= 0 else -0.002
-        ax.text(x + offset, bar.get_y() + bar.get_height() / 2,
-                f"{sign}{val:.2f}", va="center", ha=ha, fontsize=9, fontweight="bold",
-                color=GREEN if val >= 0 else RED)
+        ax.text(
+            x + offset,
+            bar.get_y() + bar.get_height() / 2,
+            f"{sign}{val:.1f}%",
+            va="center",
+            ha=ha,
+            fontsize=9,
+            fontweight="bold",
+            color=GREEN if val >= 0 else RED,
+        )
 
+    max_abs = max(abs(v) for v in values)
+    ax.set_xlim(-max_abs * 1.5, max_abs * 1.5)
     ax.axvline(0, color="black", linewidth=1.0)
     ax.set_yticks(range(len(names)))
     ax.set_yticklabels(names, fontsize=9)
-    ax.set_xlabel("F1-Score Δ (s2 − s1)")
+    ax.set_xlabel("F1-Score Δ in percentage points (s2 - s1)")
     ax.yaxis.grid(False)
     ax.xaxis.grid(True)
 
     session_s1 = Path(args.s1).parent.parts[-2]
     session_s2 = Path(args.s2).parent.parts[-2]
-    fig.text(0.5, -0.02,
-             f"{session_s1} ({backbone_s1})  →  {session_s2} ({backbone_s2})",
-             ha="center", fontsize=9, color="#555555", style="italic")
+    fig.text(
+        0.5,
+        -0.02,
+        f"{session_s1} ({backbone_s1})  →  {session_s2} ({backbone_s2})",
+        ha="center",
+        fontsize=9,
+        color="#555555",
+        style="italic",
+    )
 
     plt.tight_layout()
     out = Path(args.output)

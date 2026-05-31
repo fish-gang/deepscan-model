@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import torch
 from datasets import load_dataset, load_from_disk
 from dotenv import load_dotenv
 from torch.utils.data import Dataset, DataLoader
@@ -74,13 +73,6 @@ class DeepScanDataModule(pl.LightningDataModule):
             f"Split sizes: train={len(self.train_ds)}, "
             f"val={len(self.val_ds)}, test={len(self.test_ds)}"
         )
-
-    def class_weights(self) -> torch.Tensor:
-        """Inverse-frequency weights for CrossEntropyLoss, normalized so mean weight = 1."""
-        labels = self.train_ds.dataset["label"]
-        counts = torch.bincount(torch.tensor(labels))
-        weights = 1.0 / counts.float()
-        return weights / weights.sum() * len(counts)
 
     def train_dataloader(self):
         return DataLoader(
