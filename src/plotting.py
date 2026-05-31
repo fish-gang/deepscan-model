@@ -88,7 +88,6 @@ _LEGEND_KW = dict(
 def _plot_loss(runs: list[dict], labels: list[str], output: str | None) -> None:
     fig, ax = plt.subplots(figsize=(8, 5))
 
-
     for i, (run, label) in enumerate(zip(runs, labels)):
         color = _PALETTE[i % len(_PALETTE)]
         epochs = run["epochs"]
@@ -123,7 +122,6 @@ def _plot_loss(runs: list[dict], labels: list[str], output: str | None) -> None:
 
 def _plot_acc(runs: list[dict], labels: list[str], output: str | None) -> None:
     fig, ax = plt.subplots(figsize=(8, 5))
-
 
     for i, (run, label) in enumerate(zip(runs, labels)):
         color = _PALETTE[i % len(_PALETTE)]
