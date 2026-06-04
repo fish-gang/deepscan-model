@@ -1,6 +1,6 @@
 # DeepScan Classification Model
 
-Image classification model for tropical reef fish species, built with PyTorch.
+Image classification model for tropical reef fish species. Trains multiple backbone architectures, auto-generates comparison plots, and exports the best model to Core ML for on-device iOS inference.
 
 ## Prerequisites
 
@@ -15,68 +15,91 @@ cd deepscan-model
 uv sync
 ```
 
-`uv sync` automatically creates a new virtual environment with the correct Python version.
+`uv sync` automatically creates a virtual environment with the correct Python version.
 
 ## Configuration
 
-Training hyperparameters are defined in YAML config files under `configs/`. Run a custom experiment:
+Training is configured via YAML files under `configs/`. The default config is `configs/default.yaml`. Key fields:
 
-```bash
-uv run python main.py --config configs/mobilenet_experiment.yaml
+```yaml
+session: "s2" # groups checkpoints and plots — increment per new run
+
+dataset:
+  repo_id: "fish-gang/deepscan-dataset"
+  revision: "v1.0"
+  num_classes: 14
+  force_download: false # set to true to re-download the dataset
+
+model:
+  backbones: # all listed backbones are trained sequentially
+    - squeezenet1_1
+    - mobilenet_v3_small
+    - shufflenet_v2_x1_0
+    - mobilenet_v3_large
+    - efficientnet_b0
+    - resnet50
+  pretrained: true
+
+training:
+  max_epochs: 40
+  lr: 0.0001
 ```
 
-Each training run creates a timestamped directory under `checkpoints/` containing the config, best model, and last checkpoint.
-
-## Running
+## Training
 
 ```bash
 uv run python main.py
 ```
 
-For long training runs on the server, use tmux so the process survives disconnects:
+With a custom config:
 
 ```bash
-tmux new -s training
-uv run python main.py
-# Detach: Ctrl+B, then D
-# Reconnect: tmux attach -t training
+uv run python main.py --config configs/default.yaml
 ```
 
-## Docker
+Each run trains all backbones in `model.backbones` sequentially. When finished, it:
 
-As an alternative to installing dependencies locally, you can use Docker. Requires [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) for GPU support.
+1. Saves per-epoch training curves to `plots/{session}_{revision}_comparison.png`
+2. Saves a test-accuracy summary chart to `plots/{session}_{revision}_summary.png`
+3. Exports the best-performing backbone to `model/DeepScanClassifier.mlpackage`
+
+To skip the Core ML export:
 
 ```bash
-docker build -t deepscan-model .
-docker run --gpus all deepscan-model --config configs/default.yaml
+uv run python main.py --no-export
+```
+
+## Checkpoints
+
+Each backbone run creates a timestamped directory:
+
+```
+checkpoints/{session}/{YYYY-MM-DD_HHMMSS}_{backbone}/
+    best.ckpt     — best validation accuracy checkpoint
+    config.yaml   — copy of the config used
+    metrics.json  — per-epoch train/val metrics and final test accuracy
 ```
 
 ## Dataset
 
-The dataset is loaded automatically from [HuggingFace](https://huggingface.co/datasets/fish-gang/deepscan-dataset) on first run and cached locally under `data/`. To force re-download, set `force_download=True`.
+The dataset is downloaded automatically from [HuggingFace](https://huggingface.co/datasets/fish-gang/deepscan-dataset) on first run and cached under `data/`. It contains 7'794 images across 14 classes: 12 tropical reef fish species plus `unknown_fish` and `no_fish` rejection classes. The 70/15/15 train/val/test split is applied at training time (stratified by class, seed 42).
 
-## Prediction
+## Docker
 
-Run inference on new images using a trained checkpoint:
+Requires [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) for GPU support.
 
 ```bash
-# Single image
-uv run python -m scripts.predict --checkpoint checkpoints/<run>/best.ckpt --image fish.jpg
-
-# Folder of images
-uv run python -m scripts.predict --checkpoint checkpoints/<run>/best.ckpt --image images/
+docker build -t deepscan-model .
+docker run --gpus all deepscan-model
 ```
 
-## Exporting to Core ML Format
+## Long Training Runs
 
-**Classifier** - run after each training run:
-
-```bash
-uv run python -m scripts.export_classifier --checkpoint checkpoints/<run>/best.ckpt
-```
-
-**Detector** - run once when swapping the YOLO model. Place the `.pt` file in `detector/` first (default: `yolov8m-worldv2.pt`, override with `--weights`):
+On the GPU server, use `screen` so training survives SSH disconnects:
 
 ```bash
-uv run python -m scripts.export_detector --export
+screen -S deepscan
+uv run python main.py
+# Detach: Ctrl+A, then D
+# Reconnect: screen -r deepscan
 ```
