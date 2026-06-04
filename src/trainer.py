@@ -14,6 +14,8 @@ from src.model import create_model
 
 
 class DeepScanClassifier(pl.LightningModule):
+    """LightningModule wrapping any torchvision backbone for 14-class fish classification."""
+
     def __init__(
         self,
         num_classes: int,

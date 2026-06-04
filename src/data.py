@@ -1,3 +1,5 @@
+"""Dataset loading, stratified 70/15/15 splitting, and DataLoaders."""
+
 from pathlib import Path
 
 from datasets import load_dataset, load_from_disk
@@ -10,6 +12,8 @@ load_dotenv()
 
 
 class DeepScanDataset(Dataset):
+    """Wraps a HuggingFace Arrow dataset split as a PyTorch Dataset."""
+
     def __init__(self, hf_dataset, transform=None):
         self.dataset = hf_dataset
         self.transform = transform
@@ -29,6 +33,8 @@ class DeepScanDataset(Dataset):
 
 
 class DeepScanDataModule(pl.LightningDataModule):
+    """Loads fish-gang/deepscan-dataset and produces stratified train/val/test splits."""
+
     def __init__(self, config):
         super().__init__()
         self.dataset_cfg = config.dataset

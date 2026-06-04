@@ -1,3 +1,5 @@
+"""Augmentation pipelines for training and validation/test."""
+
 import random
 
 import numpy as np
@@ -27,6 +29,7 @@ class UnderwaterColorShift:
 
 
 def train_transforms(image_size=224):
+    """Domain-aware augmentation pipeline including UnderwaterColorShift."""
     return transforms.Compose(
         [
             transforms.RandomResizedCrop(
@@ -57,6 +60,7 @@ def train_transforms(image_size=224):
 
 
 def val_transforms(image_size=224):
+    """Deterministic resize → center-crop → normalize; used for val and test."""
     return transforms.Compose(
         [
             transforms.Resize(int(image_size * 1.14)),  # e.g. 256 for 224

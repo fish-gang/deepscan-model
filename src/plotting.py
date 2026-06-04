@@ -1,3 +1,5 @@
+"""Training-curve and model-comparison plots, auto-generated after each session."""
+
 import json
 from collections import Counter
 from pathlib import Path
@@ -178,6 +180,7 @@ def _plot_acc(runs: list[dict], labels: list[str], output: str | None) -> None:
 
 
 def plot_training_curves(run_paths: list[str], output: str | None = None) -> None:
+    """Write loss and accuracy curves for all runs to {output}_loss.png / {output}_acc.png."""
     paths = [Path(p) for p in run_paths]
     runs = [_load_metrics(p) for p in paths]
     labels = _run_labels(runs, paths)
@@ -193,6 +196,7 @@ def plot_training_curves(run_paths: list[str], output: str | None = None) -> Non
 
 
 def plot_model_comparison(run_paths: list[str], output: str | None = None) -> None:
+    """Horizontal bar chart of test accuracy and parameter count, best model highlighted."""
     paths = [Path(p) for p in run_paths]
     runs = [_load_metrics(p) for p in paths]
 

@@ -1,3 +1,5 @@
+"""Backbone factory — replaces the classification head for transfer learning."""
+
 import torch.nn as nn
 from torchvision import models
 
@@ -5,6 +7,11 @@ from torchvision import models
 
 
 def create_model(num_classes=14, backbone="efficientnet_b0", pretrained=True):
+    """Return an ImageNet-pretrained backbone with its head replaced.
+
+    Supported backbones: squeezenet1_1, mobilenet_v3_small/large,
+    shufflenet_v2_x1_0, efficientnet_b0/b4, resnet50, resnet152.
+    """
     weights = "IMAGENET1K_V1" if pretrained else None
 
     if backbone == "squeezenet1_1":

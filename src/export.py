@@ -1,3 +1,5 @@
+"""PyTorch → TorchScript → Core ML export with ImageNet normalization baked in."""
+
 import json
 from pathlib import Path
 from types import SimpleNamespace
@@ -18,6 +20,11 @@ def _resolve_backbone(run_dir: Path) -> str:
 
 
 def export(run_dir: Path, config: SimpleNamespace) -> Path:
+    """Export best.ckpt from run_dir to model/DeepScanClassifier.mlpackage.
+
+    ImageNet mean/std normalization is baked into the Core ML input layer so
+    the iOS app can feed raw pixel values without preprocessing.
+    """
     ckpt_path = run_dir / "best.ckpt"
     backbone = _resolve_backbone(run_dir)
 
@@ -88,6 +95,7 @@ def export(run_dir: Path, config: SimpleNamespace) -> Path:
 
 
 def export_best(run_dirs: list[Path], config: SimpleNamespace) -> Path | None:
+    """Pick the run with the highest test_acc across run_dirs and call export()."""
     best_run, best_acc = None, -1.0
     for run_dir in run_dirs:
         metrics_path = Path(run_dir) / "metrics.json"
