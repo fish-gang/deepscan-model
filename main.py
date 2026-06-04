@@ -1,7 +1,9 @@
 import argparse
+from pathlib import Path
 import yaml
 from types import SimpleNamespace
 
+from src.evaluate import evaluate_metrics
 from src.export import export_best
 from src.plotting import plot_model_comparison, plot_training_curves
 from src.trainer import train
@@ -22,14 +24,20 @@ def main():
     with open(args.config) as f:
         config = dict_to_namespace(yaml.safe_load(f))
 
+    session = getattr(config, "session", "default")
+    revision = config.dataset.revision.replace("/", "-")
+
     run_dirs = []
     for backbone in config.model.backbones:
         config.model.backbone = backbone
         run_dir = train(config, config_path=args.config)
         run_dirs.append(run_dir)
+        # Create evaluation plots (confusion matrix + F1 scores) for this model
+        evaluate_metrics(
+            run_dir, config,
+            Path("plots") / f"{session}_{revision}_{backbone}",
+        )
 
-    session = getattr(config, "session", "default")
-    revision = config.dataset.revision.replace("/", "-")
     run_dir_strs = [str(r) for r in run_dirs]
 
     plot_training_curves(
