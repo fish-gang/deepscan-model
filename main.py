@@ -34,7 +34,8 @@ def main():
         run_dirs.append(run_dir)
         # Create evaluation plots (confusion matrix + F1 scores) for this model
         evaluate_metrics(
-            run_dir, config,
+            run_dir,
+            config,
             Path("plots") / f"{session}_{revision}_{backbone}",
         )
 

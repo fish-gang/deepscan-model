@@ -23,8 +23,12 @@ def dict_to_namespace(d: dict) -> SimpleNamespace:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Confusion matrix and F1-score on test set")
-    parser.add_argument("--checkpoint", type=str, required=True, help="Path to best.ckpt")
+    parser = argparse.ArgumentParser(
+        description="Confusion matrix and F1-score on test set"
+    )
+    parser.add_argument(
+        "--checkpoint", type=str, required=True, help="Path to best.ckpt"
+    )
     parser.add_argument("--output", type=str, required=True, help="Output directory")
     args = parser.parse_args()
 

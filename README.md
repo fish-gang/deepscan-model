@@ -84,6 +84,16 @@ checkpoints/{session}/{YYYY-MM-DD_HHMMSS}_{backbone}/
 
 The dataset is downloaded automatically from [HuggingFace](https://huggingface.co/datasets/fish-gang/deepscan-dataset) on first run and cached under `data/`. It contains 7'794 images across 14 classes: 12 tropical reef fish species plus `unknown_fish` and `no_fish` rejection classes. The 70/15/15 train/val/test split is applied at training time (stratified by class, seed 42).
 
+## Detector
+
+`detector/` contains YOLO-World weights. `yolov8m-worldv2.pt` was exported as `model/FishDetector.mlpackage`.
+
+To re-export the detector:
+
+```bash
+uv run python -m scripts.export_detector --export
+```
+
 ## Docker
 
 Requires [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) for GPU support.
